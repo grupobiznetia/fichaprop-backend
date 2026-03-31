@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropRebrander — Tu publicación, tu marca</title>
+<style>
+  :root { --brand: #1a3a5c; --green: #25d366; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+
+  /* NAV */
+  nav { background: var(--brand); padding: 16px 32px; display: flex; align-items: center; gap: 12px; }
+  nav .logo { color: white; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
+  nav .logo span { color: #7ec8e3; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, var(--brand) 0%, #2d6a9f 100%); color: white; text-align: center; padding: 60px 20px 50px; }
+  .hero h1 { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 800; margin-bottom: 12px; }
+  .hero p { font-size: 1.05rem; opacity: .85; max-width: 520px; margin: 0 auto; }
+
+  /* MAIN CARD */
+  .container { max-width: 720px; margin: -30px auto 40px; padding: 0 16px; }
+  .card { background: white; border-radius: 18px; padding: 32px; box-shadow: 0 4px 30px rgba(0,0,0,.1); }
+
+  /* STEPS */
+  .steps { display: flex; gap: 6px; margin-bottom: 28px; }
+  .step { flex: 1; text-align: center; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: #e8eef5; color: var(--brand); font-weight: 800; font-size: .9rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; transition: background .3s, color .3s; }
+  .step.active .step-num { background: var(--brand); color: white; }
+  .step.done .step-num { background: #22c55e; color: white; }
+  .step-label { font-size: .7rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .step-line { flex: none; width: 32px; height: 2px; background: #e0e0e0; align-self: center; margin-bottom: 18px; }
+
+  /* FORM */
+  label { display: block; font-size: .85rem; font-weight: 600; color: #444; margin-bottom: 6px; margin-top: 18px; }
+  input, textarea {
+    width: 100%; padding: 12px 14px; border: 1.5px solid #dde3ea; border-radius: 10px;
+    font-size: .95rem; font-family: inherit; transition: border .2s;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--brand); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width: 500px) { .row2 { grid-template-columns: 1fr; } }
+
+  /* COLOR PICKER */
+  .color-row { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  .color-row label { margin: 0; }
+  input[type="color"] { width: 48px; height: 38px; border: 1.5px solid #dde3ea; border-radius: 8px; padding: 2px; cursor: pointer; }
+
+  /* BTN */
+  .btn { display: block; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 24px; transition: opacity .2s, transform .1s; }
+  .btn:hover { opacity: .9; }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--brand); color: white; }
+  .btn-wa { background: var(--green); color: white; font-size: 1.05rem; }
+  .btn-secondary { background: #f0f4f8; color: var(--brand); }
+
+  /* STATUS */
+  .status { display: none; text-align: center; padding: 20px; }
+  .spinner { width: 44px; height: 44px; border: 4px solid #e0e0e0; border-top-color: var(--brand); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status p { color: #555; font-size: .95rem; }
+  .status small { color: #aaa; font-size: .8rem; }
+
+  /* RESULT */
+  .result { display: none; text-align: center; }
+  .result-icon { font-size: 3rem; margin-bottom: 12px; }
+  .result h2 { font-size: 1.3rem; color: var(--brand); margin-bottom: 8px; }
+  .result-meta { font-size: .9rem; color: #555; margin-bottom: 20px; }
+  .url-box { background: #f0f9ff; border: 1.5px dashed #7ec8e3; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; word-break: break-all; }
+  .url-box a { color: var(--brand); font-weight: 600; font-size: .9rem; flex: 1; text-align: left; }
+  .copy-btn { background: var(--brand); color: white; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+  .copy-btn.copied { background: #22c55e; }
+
+  /* AGENTE ID STORAGE */
+  .info-box { background: #fffbea; border: 1px solid #f5d84a; border-radius: 10px; padding: 14px 16px; font-size: .82rem; color: #7a5f00; margin-top: 16px; line-height: 1.5; }
+
+  .sep { border: none; border-top: 1px solid #eee; margin: 28px 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Prop<span>Rebrander</span></div>
+</nav>
+
+<div class="hero">
+  <h1>Publicaciones a tu nombre, en segundos</h1>
+  <p>Pegá el link de cualquier propiedad y generá tu página personalizada para compartir.</p>
+</div>
+
+<div class="container">
+  <div class="card">
+
+    <!-- STEPS INDICATOR -->
+    <div class="steps">
+      <div class="step active" id="s1">
+        <div class="step-num">1</div>
+        <div class="step-label">Tu perfil</div>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" id="s2">
+        <div class="step-num">2</div>
+        <div class="step-label">Propiedad</div>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" id="s3">
+        <div class="step-num">3</div>
+        <div class="step-label">Tu link</div>
+      </div>
+    </div>
+
+    <!-- PANEL 1: PERFIL DEL AGENTE -->
+    <div id="panel-perfil">
+      <div class="row2">
+        <div>
+          <label>Tu nombre completo *</label>
+          <input id="nombre" placeholder="Ej: María González">
+        </div>
+        <div>
+          <label>Empresa / Inmobiliaria *</label>
+          <input id="empresa" placeholder="Ej: González Propiedades">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>Teléfono (con código de área) *</label>
+          <input id="telefono" placeholder="+54 9 351 000-0000">
+        </div>
+        <div>
+          <label>WhatsApp (solo números) *</label>
+          <input id="whatsapp" placeholder="5493510000000">
+        </div>
+      </div>
+
+      <label>Email *</label>
+      <input id="email" type="email" placeholder="tu@email.com">
+
+      <div class="row2">
+        <div>
+          <label>Instagram (opcional)</label>
+          <input id="instagram" placeholder="@tuinmobiliaria">
+        </div>
+        <div>
+          <label>Logo (URL, opcional)</label>
+          <input id="logo_url" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="color-row">
+        <label>Color de marca:</label>
+        <input type="color" id="color" value="#1a3a5c">
+        <span id="color-hex" style="font-size:.85rem;color:#666">#1a3a5c</span>
+      </div>
+
+      <div class="info-box" id="agente-guardado" style="display:none">
+        ✅ Perfil guardado — no necesitás completarlo de nuevo. 
+        <br><strong>ID:</strong> <span id="agente-id-display"></span>
+        <br><a href="#" id="cambiar-agente" style="color:#7a5f00">Cambiar perfil</a>
+      </div>
+
+      <button class="btn btn-primary" onclick="guardarAgente()">Continuar →</button>
+    </div>
+
+    <!-- PANEL 2: URL DE PROPIEDAD -->
+    <div id="panel-url" style="display:none">
+      <label>Link de la propiedad</label>
+      <input id="prop-url" placeholder="https://www.zonaprop.com.ar/propiedades/..." style="font-size:.88rem">
+      <p style="font-size:.78rem;color:#888;margin-top:6px">Compatible: ZonaProp, MercadoLibre Inmuebles, clasificados.lavoz.com.ar</p>
+
+      <button class="btn btn-primary" onclick="generarPagina()">🚀 Generar mi página</button>
+      <button class="btn btn-secondary" onclick="volverAPerfil()">← Editar perfil</button>
+
+      <!-- STATUS LOADING -->
+      <div class="status" id="status">
+        <div class="spinner"></div>
+        <p>Extrayendo fotos y datos de la propiedad…</p>
+        <small>Puede tardar 20–40 segundos (Playwright abre el sitio como un navegador real)</small>
+      </div>
+    </div>
+
+    <!-- PANEL 3: RESULTADO -->
+    <div id="panel-resultado" style="display:none" class="result">
+      <div class="result-icon">🎉</div>
+      <h2>¡Tu página está lista!</h2>
+      <div class="result-meta" id="result-meta"></div>
+
+      <div class="url-box">
+        <a id="result-link" href="#" target="_blank">—</a>
+        <button class="copy-btn" id="copy-btn" onclick="copiarLink()">Copiar</button>
+      </div>
+
+      <a id="wa-btn" class="btn btn-wa" href="#" target="_blank">
+        📱 Compartir por WhatsApp
+      </a>
+
+      <hr class="sep">
+      <button class="btn btn-secondary" onclick="nuevaPropiedad()">+ Generar otra propiedad</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+// ⚠️  Reemplazá esta URL con la de tu backend en Railway
+const API_URL = "https://TU-BACKEND.railway.app";
+
+// ── Estado ─────────────────────────────────────────────────────────────────
+let agenteId = localStorage.getItem("proprebrander_agente_id") || null;
+let urlActual = "";
+
+// ── Al cargar ──────────────────────────────────────────────────────────────
+window.onload = () => {
+  // Color picker → mostrar hex
+  document.getElementById("color").addEventListener("input", e => {
+    document.getElementById("color-hex").textContent = e.target.value;
+  });
+
+  // Si ya tiene perfil guardado, mostrar info
+  if (agenteId) {
+    mostrarPerfilGuardado();
+  }
+};
+
+function mostrarPerfilGuardado() {
+  document.getElementById("agente-guardado").style.display = "block";
+  document.getElementById("agente-id-display").textContent = agenteId;
+  // Pre-avanzar al panel de URL
+  setStep(2);
+  document.getElementById("panel-perfil").style.display = "none";
+  document.getElementById("panel-url").style.display = "block";
+}
+
+document.getElementById("cambiar-agente") && 
+  document.getElementById("cambiar-agente").addEventListener("click", e => {
+    e.preventDefault();
+    agenteId = null;
+    localStorage.removeItem("proprebrander_agente_id");
+    document.getElementById("agente-guardado").style.display = "none";
+    setStep(1);
+    document.getElementById("panel-perfil").style.display = "block";
+    document.getElementById("panel-url").style.display = "none";
+  });
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById("s" + i);
+    el.className = "step " + (i < n ? "done" : i === n ? "active" : "");
+  });
+}
+
+function err(msg) {
+  alert("❌ " + msg);
+}
+
+// ── PASO 1: Guardar agente ─────────────────────────────────────────────────
+async function guardarAgente() {
+  const campos = ["nombre","empresa","telefono","whatsapp","email"];
+  const body = {};
+  for (const c of campos) {
+    body[c] = document.getElementById(c).value.trim();
+    if (!body[c]) { err("Completá el campo: " + c); return; }
+  }
+  body.color     = document.getElementById("color").value;
+  body.logo_url  = document.getElementById("logo_url").value.trim();
+  body.instagram = document.getElementById("instagram").value.trim();
+
+  try {
+    const res = await fetch(`${API_URL}/agentes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Error al guardar");
+
+    agenteId = data.id;
+    localStorage.setItem("proprebrander_agente_id", agenteId);
+
+    setStep(2);
+    document.getElementById("panel-perfil").style.display = "none";
+    document.getElementById("panel-url").style.display = "block";
+
+  } catch (e) {
+    err("No se pudo guardar el perfil: " + e.message);
+  }
+}
+
+function volverAPerfil() {
+  setStep(1);
+  document.getElementById("panel-perfil").style.display = "block";
+  document.getElementById("panel-url").style.display = "none";
+}
+
+// ── PASO 2: Generar página ─────────────────────────────────────────────────
+async function generarPagina() {
+  const url = document.getElementById("prop-url").value.trim();
+  if (!url || !url.startsWith("http")) {
+    err("Pegá una URL válida (debe empezar con https://)");
+    return;
+  }
+
+  document.getElementById("status").style.display = "block";
+  document.querySelector(".btn-primary").disabled = true;
+
+  try {
+    const res = await fetch(`${API_URL}/scrape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, agente_id: agenteId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Error del servidor");
+
+    urlActual = data.url_publica;
+    mostrarResultado(data);
+
+  } catch (e) {
+    err("Error generando la página: " + e.message);
+    document.getElementById("status").style.display = "none";
+    document.querySelector(".btn-primary").disabled = false;
+  }
+}
+
+function mostrarResultado(data) {
+  document.getElementById("status").style.display = "none";
+  document.getElementById("panel-url").style.display = "none";
+  document.getElementById("panel-resultado").style.display = "block";
+  setStep(3);
+
+  document.getElementById("result-link").textContent = data.url_publica;
+  document.getElementById("result-link").href = data.url_publica;
+  document.getElementById("result-meta").textContent =
+    `${data.titulo || "Propiedad"} · ${data.precio || ""} · ${data.n_fotos} fotos`;
+
+  const waText = encodeURIComponent(
+    `🏠 *${data.titulo}*\n${data.precio}\n\nVer publicación: ${data.url_publica}`
+  );
+  document.getElementById("wa-btn").href = `https://wa.me/?text=${waText}`;
+}
+
+function copiarLink() {
+  navigator.clipboard.writeText(urlActual).then(() => {
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = "¡Copiado!";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("copied"); }, 2000);
+  });
+}
+
+function nuevaPropiedad() {
+  document.getElementById("panel-resultado").style.display = "none";
+  document.getElementById("panel-url").style.display = "block";
+  document.getElementById("prop-url").value = "";
+  document.querySelector(".btn-primary").disabled = false;
+  setStep(2);
+}
+</script>
+
+</body>
+</html>
