@@ -188,6 +188,16 @@ def _extraer_zonaprop(soup) -> dict:
     # Fallback DOM
     if not imagenes:
         for img in soup.find_all("img"):
+            src = img.get("src") or img.get("data-src") or ""
+            if "static" in src and src.startswith("http") and src not in imagenes:
+                if not any(x in src.lower() for x in ["logo", "marca", "watermark"]):
+                    imagenes.append(src)
+
+    return {"titulo": titulo, "precio": precio, "descripcion": descripcion,
+            "caracteristicas": list(dict.fromkeys(caracteristicas))[:15],
+            "imagenes": imagenes[:25]}
+
+def _extraer_mercadolibre
             
 
 def _extraer_mercadolibre(soup) -> dict:
