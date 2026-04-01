@@ -197,9 +197,6 @@ def _extraer_zonaprop(soup) -> dict:
             "caracteristicas": list(dict.fromkeys(caracteristicas))[:15],
             "imagenes": imagenes[:25]}
 
-def _extraer_mercadolibre
-            
-
 def _extraer_mercadolibre(soup) -> dict:
     titulo = precio = descripcion = ""
     caracteristicas = []
