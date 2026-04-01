@@ -146,7 +146,7 @@ def _extraer_zonaprop(soup) -> dict:
         if el and el.text.strip():
             precio = el.text.strip(); break
 
-    for sel in ["[data-qa='posting-description']", ".description-content", "#longDescription"]:
+    for sel in ["[data-qa='posting-description']", ".description-content", "#longDescription", ".section-description", "[class*='description']"]:
         el = soup.select_one(sel)
         if el and el.text.strip():
             descripcion = el.text.strip(); break
@@ -156,7 +156,25 @@ def _extraer_zonaprop(soup) -> dict:
         if t and len(t) < 80:
             caracteristicas.append(t)
 
-    for s in soup.find_all("script"):
+    # Palabras a filtrar de descripción y características
+    FILTROS = ["remax", "century21", "coldwell", "inmobiliaria", "broker", "agencia",
+               "contactenos", "contáctenos", "whatsapp", "telefono", "teléfono",
+               "llamar", "escribir", "@", "www.", "http", "instagram", "facebook"]
+
+    def texto_limpio(texto):
+        lineas = texto.split("\n")
+        lineas_limpias = []
+        for linea in lineas:
+            if not any(f.lower() in linea.lower() for f in FILTROS):
+                lineas_limpias.append(linea)
+        return "\n".join(lineas_limpias).strip()
+
+    descripcion = texto_limpio(descripcion)
+    caracteristicas = [c for c in caracteristicas if not any(f.lower() in c.lower() for f in FILTROS)]
+
+    # Imágenes desde JSON embebido
+    scripts = soup.find_all("script")
+    for s in scripts:
         txt = s.string or ""
         urls = re.findall(r'https?://[^"\']+static[^"\']+\.(?:jpg|jpeg|png|webp)', txt)
         for u in urls:
@@ -164,16 +182,13 @@ def _extraer_zonaprop(soup) -> dict:
             if clean not in imagenes:
                 imagenes.append(clean)
 
+    # Filtrar imágenes de logos/marcas
+    imagenes = [img for img in imagenes if not any(x in img.lower() for x in ["logo", "marca", "watermark", "brand"])]
+
+    # Fallback DOM
     if not imagenes:
         for img in soup.find_all("img"):
-            src = img.get("src") or img.get("data-src") or ""
-            if "static" in src and src.startswith("http") and src not in imagenes:
-                imagenes.append(src)
-
-    return {"titulo": titulo, "precio": precio, "descripcion": descripcion,
-            "caracteristicas": list(dict.fromkeys(caracteristicas))[:15],
-            "imagenes": imagenes[:25]}
-
+            
 
 def _extraer_mercadolibre(soup) -> dict:
     titulo = precio = descripcion = ""
